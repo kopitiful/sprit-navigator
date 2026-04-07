@@ -195,9 +195,12 @@ if st.session_state.get("search_done"):
     
     with st.spinner("📍 Orte lokalisieren..."):
         s_coords = get_coords(start_city)
+        import time
+        time.sleep(1)  # 1 Sekunde Pause gegen Rate-Limit
         e_coords = get_coords(end_city)
         via_coords = None
         if via_city:
+            time.sleep(1)  # Nochmal Pause
             via_coords = get_coords(via_city)
     
     if not s_coords or not e_coords:
