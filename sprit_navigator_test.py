@@ -19,17 +19,35 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # --- CONFIGURATION ---
 API_KEY = None
+
+# Try Streamlit secrets (Streamlit Cloud)
 try:
     API_KEY = st.secrets["TANKERKOENIG_API_KEY"]
 except KeyError:
     pass
 
+# Try environment variable (local development)
 if not API_KEY:
     API_KEY = os.getenv("TANKERKOENIG_API_KEY")
 
+# If still no API key, show error
 if not API_KEY:
-    API_KEY = "079fb998-1862-4c70-ba74-3ecc70e41d0a"
-    st.warning("⚠️ Using hardcoded API key (testing mode). This is NOT secure!")
+    st.error("❌ API-Key nicht gefunden!")
+    st.info("""
+    **Lokale Entwicklung:**
+    Erstelle eine `.env` Datei:
+    ```
+    TANKERKOENIG_API_KEY="dein-api-key"
+    ```
+    
+    **Streamlit Cloud:**
+    1. Gehe zu App Settings
+    2. Klick "Secrets"
+    3. Füge hinzu: `TANKERKOENIG_API_KEY = "dein-api-key"`
+    
+    **API Key bekommen:** https://creativecommons.tankerkoenig.de/
+    """)
+    st.stop()
 
 
 # --- FUNCTIONS ---
