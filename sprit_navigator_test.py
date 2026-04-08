@@ -363,16 +363,16 @@ if st.session_state.get("df") is not None:
         with col2:
             st.write(f"**{row['Marke']}**")
         with col3:
-            st.write(f"🛣️ {dist_km:.1f} km")  # Strecken-Kilometer
-        with col4:
             st.write(f"📍 {row['Distanz']}")  # Distanz zur Station
+        with col4:
+            st.write(f"{row['Ort']}")
         with col5:
-            # Google Maps Link - Button only (no text)
+            # Google Maps Link - Real Streamlit Button
             maps_url = f"https://www.google.com/maps/search/{row['Adresse']}+{row['Ort']}"
-            st.markdown(f"<a href='{maps_url}' target='_blank'><button style='background-color:#4CAF50; color:white; padding:8px 12px; border:none; border-radius:4px; cursor:pointer; font-size:16px;'>🗺️</button></a>", unsafe_allow_html=True)
+            st.link_button("🗺️", maps_url)
         
         st.write(f"*{row['Adresse']}*")
-        st.write(f"{row['Ort']} | {row['Status']}")
+        st.write(f"{row['Status']}")
         st.divider()
     
     st.markdown("---")
