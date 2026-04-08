@@ -98,28 +98,7 @@ def get_route(s_coords, e_coords):
     return None, None
 
 
-def calculate_distance_osrm(station_lat, station_lng, route_coords):
-    """Calculate shortest distance from station to route using OSRM."""
-    try:
-        # Find closest point on route
-        min_distance = float('inf')
-        
-        for route_lat, route_lng in route_coords:
-            # Use OSRM to get distance between station and route point
-            url = f"http://router.project-osrm.org/route/v1/driving/{station_lng},{station_lat};{route_lng},{route_lat}"
-            
-            res = requests.get(url, verify=False, timeout=5).json()
-            if res.get('code') == 'Ok' and res.get('routes'):
-                distance = res['routes'][0].get('distance', float('inf')) / 1000  # Convert to km
-                if distance < min_distance:
-                    min_distance = distance
-        
-        return min_distance if min_distance != float('inf') else 0
-    except Exception as e:
-        return 0
-
-
-def find_stations(waypoints, fuel_type, radius, api_key, route_coords=None):
+def find_stations(waypoints, fuel_type, radius, api_key):
     """Find gas stations along waypoints."""
     all_stations = []
     seen_ids = set()
@@ -147,15 +126,8 @@ def find_stations(waypoints, fuel_type, radius, api_key, route_coords=None):
                 
                 address = f"{station.get('street', '')} {station.get('houseNumber', '')}".strip()
                 
-                # Get station coordinates
-                station_lat = float(station.get('lat', 0))
-                station_lng = float(station.get('lng', 0))
-                
-                # Calculate real distance to route using OSRM
-                if route_coords:
-                    distance_to_station = calculate_distance_osrm(station_lat, station_lng, route_coords)
-                else:
-                    distance_to_station = station.get('dist', 0)
+                # Distance from API (in km)
+                distance_to_station = station.get('dist', 0)
                 
                 all_stations.append({
                     "Preis": f"{price:.3f} €",
@@ -166,8 +138,8 @@ def find_stations(waypoints, fuel_type, radius, api_key, route_coords=None):
                     "Status": "✅" if station.get("isOpen") else "❌",
                     "raw_price": price,
                     "distance_to_station": distance_to_station,
-                    "lat": station_lat,
-                    "lng": station_lng,
+                    "lat": float(station.get('lat', 0)),
+                    "lng": float(station.get('lng', 0)),
                 })
                 seen_ids.add(station["id"])
         
@@ -297,13 +269,13 @@ if st.session_state.get("search_done"):
             waypoints1 = coords1[::max(1, len(coords1) // max(1, int(dist_km / 30)))]
             if coords1[-1] not in waypoints1:
                 waypoints1.append(coords1[-1])
-            all_stations_1 = find_stations(waypoints1, fuel_type, radius, API_KEY, coords1)
+            all_stations_1 = find_stations(waypoints1, fuel_type, radius, API_KEY)
             
             st.info("🔍 Suche auf Strecke 2: Via → Ziel...")
             waypoints2 = coords2[::max(1, len(coords2) // max(1, int(dist_km / 30)))]
             if coords2[-1] not in waypoints2:
                 waypoints2.append(coords2[-1])
-            all_stations_2 = find_stations(waypoints2, fuel_type, radius, API_KEY, coords2)
+            all_stations_2 = find_stations(waypoints2, fuel_type, radius, API_KEY)
             
             # Combine and deduplicate
             all_stations = all_stations_1
@@ -315,7 +287,7 @@ if st.session_state.get("search_done"):
                     seen_ids.add(station.get('Adresse', ''))
         else:
             # Direct route search
-            all_stations = find_stations(waypoints, fuel_type, radius, API_KEY, coords)
+            all_stations = find_stations(waypoints, fuel_type, radius, API_KEY)
     
     if all_stations:
         df = pd.DataFrame(all_stations)
