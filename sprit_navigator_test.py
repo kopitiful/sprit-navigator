@@ -52,6 +52,20 @@ if not API_KEY:
 
 # --- FUNCTIONS ---
 @st.cache_data(ttl=600)
+def get_distance_osrm(station_lat, station_lng, route_lat, route_lng):
+    """Get distance between station and route point using OSRM."""
+    try:
+        url = f"http://router.project-osrm.org/route/v1/driving/{station_lng},{station_lat};{route_lng},{route_lat}"
+        r = requests.get(url, verify=False, timeout=5)
+        data = r.json()
+        if data.get('code') == 'Ok' and data.get('routes'):
+            return data['routes'][0].get('distance', 0) / 1000  # Convert to km
+    except:
+        pass
+    return 0
+
+
+@st.cache_data(ttl=600)
 def get_coords(city):
     """Get coordinates for a German city via Nominatim."""
     if not city or not city.strip():
@@ -358,6 +372,13 @@ if st.session_state.get("df") is not None:
     
     # Display each station with Google Maps button
     for idx, (i, row) in enumerate(display_df.iterrows(), 1):
+        # Calculate real distance using OSRM for this station to first route point
+        if 'coords' in locals() and coords:
+            real_distance = get_distance_osrm(row['lat'], row['lng'], coords[0][1], coords[0][0])
+            distance_text = f"📍 {real_distance:.1f} km" if real_distance > 0 else f"📍 {row['Distanz']}"
+        else:
+            distance_text = f"📍 {row['Distanz']}"
+        
         col1, col2, col3, col4, col5 = st.columns([1, 1.5, 1.5, 1.5, 0.8])
         
         with col1:
@@ -365,7 +386,7 @@ if st.session_state.get("df") is not None:
         with col2:
             st.write(f"**{row['Marke']}**")
         with col3:
-            st.write(f"📍 {row['Distanz']}")  # Distanz zur Station
+            st.write(distance_text)
         with col4:
             st.write(f"{row['Ort']}")
         with col5:
