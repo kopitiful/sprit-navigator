@@ -356,18 +356,20 @@ if st.session_state.get("df") is not None:
     
     # Display each station with Google Maps button
     for idx, (i, row) in enumerate(display_df.iterrows(), 1):
-        col1, col2, col3, col4 = st.columns([1.5, 2, 1.5, 1])
+        col1, col2, col3, col4, col5 = st.columns([1, 1.5, 1.5, 1.5, 0.8])
         
         with col1:
             st.metric("Preis", row['Preis'], label_visibility="collapsed")
         with col2:
             st.write(f"**{row['Marke']}**")
         with col3:
-            st.write(f"📍 {row['Distanz']}")
+            st.write(f"🛣️ {dist_km:.1f} km")  # Strecken-Kilometer
         with col4:
-            # Google Maps Link
+            st.write(f"📍 {row['Distanz']}")  # Distanz zur Station
+        with col5:
+            # Google Maps Link - Button only (no text)
             maps_url = f"https://www.google.com/maps/search/{row['Adresse']}+{row['Ort']}"
-            st.markdown(f"[🗺️ Maps]({maps_url})", unsafe_allow_html=True)
+            st.markdown(f"<a href='{maps_url}' target='_blank'><button style='background-color:#4CAF50; color:white; padding:8px 12px; border:none; border-radius:4px; cursor:pointer; font-size:16px;'>🗺️</button></a>", unsafe_allow_html=True)
         
         st.write(f"*{row['Adresse']}*")
         st.write(f"{row['Ort']} | {row['Status']}")
