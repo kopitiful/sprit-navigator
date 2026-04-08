@@ -155,7 +155,6 @@ st.markdown("Finde die günstigsten Tankstellen entlang deiner Fahrtstrecke.")
 # Sidebar
 with st.sidebar:
     st.header("⚙️ Einstellungen")
-    st.info("ℹ️ Hinweis: VPN am Mac muss aktiv sein für API-Abfragen.")
 
 # Input form
 col1, col2 = st.columns(2)
@@ -349,13 +348,30 @@ if st.session_state.get("df") is not None:
         df_sorted = df.sort_values("distance_to_station", ascending=True)
         st.caption("💡 Sortiert nach: Distanz zur Route")
     
-    # Display table (TOP 5 ONLY)
+    # Display stations with Google Maps links (TOP 5 ONLY)
     st.subheader(f"📋 Top 5 {fuel_type.upper()}-Tankstellen")
-    display_cols = ["Preis", "Marke", "Distanz", "Adresse", "Ort", "Status"]
     
-    # Create display dataframe without index
-    display_df = df_sorted[display_cols].head(5).reset_index(drop=True)
-    st.table(display_df)
+    # Create dataframe for top 5
+    display_df = df_sorted.head(5).reset_index(drop=True)
+    
+    # Display each station with Google Maps button
+    for idx, (i, row) in enumerate(display_df.iterrows(), 1):
+        col1, col2, col3, col4 = st.columns([1.5, 2, 1.5, 1])
+        
+        with col1:
+            st.metric("Preis", row['Preis'], label_visibility="collapsed")
+        with col2:
+            st.write(f"**{row['Marke']}**")
+        with col3:
+            st.write(f"📍 {row['Distanz']}")
+        with col4:
+            # Google Maps Link
+            maps_url = f"https://www.google.com/maps/search/{row['Adresse']}+{row['Ort']}"
+            st.markdown(f"[🗺️ Maps]({maps_url})", unsafe_allow_html=True)
+        
+        st.write(f"*{row['Adresse']}*")
+        st.write(f"{row['Ort']} | {row['Status']}")
+        st.divider()
     
     st.markdown("---")
     st.subheader("📈 Gewinn-Analyse (für 50L Tank)")
