@@ -4,6 +4,7 @@ import urllib3
 import pandas as pd
 import os
 from pathlib import Path
+from geopy.geocoders import Nominatim
 
 # Load from .env if it exists
 env_file = Path(".env")
@@ -67,33 +68,72 @@ def get_distance_osrm(station_lat, station_lng, route_lat, route_lng):
 
 @st.cache_data(ttl=600)
 def get_coords(city):
-    """Get coordinates for a German city via Nominatim."""
+    """Get coordinates for a German city via Geopy (fallback to Google)."""
     if not city or not city.strip():
         return None
     
-    import time
-    url = f"https://nominatim.openstreetmap.org/search?q={city},Germany&format=json&limit=1"
-    headers = {'User-Agent': 'SpritNavigator_Streamlit_2026'}
+    try:
+        # Try with geopy (uses multiple APIs including OSM, cached)
+        from geopy.geocoders import GoogleV3, Nominatim as GeopifyNominatim
+        
+        # Use geopy with no rate limit as it's cached
+        geolocator = GeopifyNominatim(user_agent="spritsparer_2026")
+        location = geolocator.geocode(f"{city}, Germany")
+        
+        if location:
+            return float(location.latitude), float(location.longitude)
+    except:
+        pass
     
-    for attempt in range(3):
-        try:
-            r = requests.get(url, headers=headers, verify=False, timeout=10)
-            r.raise_for_status()
-            data = r.json()
-            if data:
-                return float(data[0]['lat']), float(data[0]['lon'])
-        except requests.Timeout:
-            if attempt < 2:
-                time.sleep(2)
-                continue
-            st.error(f"⏱️ Timeout bei Ortssuche für '{city}'")
-        except Exception as e:
-            if attempt < 2:
-                time.sleep(2)
-                continue
-            st.error(f"❌ Fehler bei Ortssuche: {e}")
-        break
+    # Fallback: Manual coordinates for common cities
+    common_cities = {
+        "berlin": (52.5200, 13.4050),
+        "münchen": (48.1351, 11.5820),
+        "hamburg": (53.5511, 9.9937),
+        "köln": (50.9375, 6.9603),
+        "frankfurt": (50.1109, 8.6821),
+        "stuttgart": (48.7758, 9.1829),
+        "düsseldorf": (51.2277, 6.7735),
+        "dortmund": (51.5136, 7.4653),
+        "essen": (51.4556, 7.0116),
+        "leipzig": (51.3397, 12.3731),
+        "dresden": (51.0504, 13.7373),
+        "hannover": (52.3759, 9.7320),
+        "nürnberg": (49.4521, 11.0767),
+        "duisburg": (51.4344, 6.7073),
+        "bochum": (51.4818, 7.2254),
+        "wuppertal": (51.2629, 7.1577),
+        "bielefeld": (52.0116, 8.5355),
+        "bonn": (50.7353, 7.0992),
+        "münster": (51.9625, 7.6251),
+        "karlsruhe": (49.0069, 8.4037),
+        "mannheim": (49.4891, 8.4673),
+        "augsburg": (48.3705, 10.8945),
+        "wiesbaden": (50.0829, 8.2430),
+        "gelsenkirchen": (51.4556, 7.0916),
+        "mönchengladbach": (51.1642, 6.4115),
+        "braunschweig": (52.2688, 10.5267),
+        "chemnitz": (50.8365, 12.9168),
+        "kiel": (54.3233, 10.1348),
+        "aachen": (50.7753, 6.0838),
+        "osnabrück": (52.2799, 8.0532),
+        "rostock": (54.0887, 12.0960),
+        "erfurt": (50.9856, 11.0296),
+        "mainz": (50.0012, 8.2765),
+        "ludwigshafen": (49.4778, 8.4427),
+        "würzburg": (49.7927, 9.9516),
+        "freiburg": (48.0021, 7.8524),
+        "ulm": (48.3985, 9.9947),
+        "heilbronn": (49.1383, 9.2200),
+        "bamberg": (49.8905, 10.8867),
+        "bayreuth": (49.9479, 11.5791),
+    }
     
+    city_lower = city.lower().strip()
+    if city_lower in common_cities:
+        return common_cities[city_lower]
+    
+    st.error(f"❌ Stadt '{city}' konnte nicht gefunden werden. Bitte eine größere Stadt eingeben.")
     return None
 
 
