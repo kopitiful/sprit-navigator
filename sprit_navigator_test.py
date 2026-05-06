@@ -67,16 +67,19 @@ def get_distance_osrm(station_lat, station_lng, route_lat, route_lng):
 
 @st.cache_data(ttl=600)
 def get_coords(city):
-    """Get coordinates for a German city via Nominatim."""
+    """Get coordinates for a German city via Nominatim with retry."""
     if not city or not city.strip():
         return None
     
+    import time
     url = f"https://nominatim.openstreetmap.org/search?q={city},Germany&format=json&limit=1"
     headers = {'User-Agent': 'SpritNavigator_Streamlit_2026'}
     
-    try:
-        r = requests.get(url, headers=headers, verify=False, timeout=5)
-        r.raise_for_status()
+    # Retry logic
+    for attempt in range(3):
+        try:
+            r = requests.get(url, headers=headers, verify=False, timeout=10)
+            r.raise_for_status()
         data = r.json()
         if data:
             return float(data[0]['lat']), float(data[0]['lon'])
@@ -211,11 +214,11 @@ if st.session_state.get("search_done"):
     with st.spinner("📍 Orte lokalisieren..."):
         s_coords = get_coords(start_city)
         import time
-        time.sleep(3)  # 3 Sekunden Pause gegen Rate-Limit
+        time.sleep(5)  # 5 Sekunden Pause gegen Rate-Limit
         e_coords = get_coords(end_city)
         via_coords = None
         if via_city:
-            time.sleep(3)  # Nochmal Pause
+            time.sleep(5)  # Nochmal Pause
             via_coords = get_coords(via_city)
     
     if not s_coords or not e_coords:
