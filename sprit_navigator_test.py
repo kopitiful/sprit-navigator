@@ -294,13 +294,13 @@ with st.sidebar:
 # Input form
 col1, col2 = st.columns(2)
 with col1:
-    start_city = st.text_input("🚀 Startpunkt", value="Barver", placeholder="z.B. Barver")
+    start_city = st.text_input("🚀 Startpunkt", value="Barver", placeholder="z.B. Düsseldorf")
 with col2:
-    end_city = st.text_input("🎯 Zielort", value="Bad Bentheim", placeholder="z.B. Bad Bentheim")
+    end_city = st.text_input("🎯 Zielort", value="Bad Bentheim", placeholder="z.B. Bonn")
 
 col1, col2 = st.columns(2)
 with col1:
-    via_city = st.text_input("📍 Via (optional)", value="", placeholder="z.B. Osnabrück (optional)")
+    via_city = st.text_input("📍 Via (optional)", value="", placeholder="z.B. Aachen (optional)")
 with col2:
     fuel_type = st.selectbox("⛽ Kraftstoff", ["e5", "e10", "diesel"])
 
