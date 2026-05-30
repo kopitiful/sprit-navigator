@@ -294,9 +294,9 @@ with st.sidebar:
 # Input form
 col1, col2 = st.columns(2)
 with col1:
-    start_city = st.text_input("🚀 Startpunkt", value="Barver", placeholder="z.B. Düsseldorf")
+    start_city = st.text_input("🚀 Startpunkt", value="", placeholder="z.B. Düsseldorf")
 with col2:
-    end_city = st.text_input("🎯 Zielort", value="Bad Bentheim", placeholder="z.B. Bonn")
+    end_city = st.text_input("🎯 Zielort", value="", placeholder="z.B. Bonn")
 
 col1, col2 = st.columns(2)
 with col1:
